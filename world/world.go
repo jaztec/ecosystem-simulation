@@ -8,36 +8,40 @@ import (
 )
 
 const (
-	foodTime int = 100
+	foodTime int = 10000
 )
 
 type TerrainLayout [][]TerrainTile
 
 // World holds all data and functions for the simulation surroundings
 type World struct {
-	baseSheet   pixel.Picture
 	grassSprite *pixel.Sprite
 	waterSprite *pixel.Sprite
 	foodSprite  *pixel.Sprite
 	tiles       [][]*Tile
+	batch       *pixel.Batch
+	needsRedraw bool
 }
 
 func (w *World) Update(frame int) {
 	for _, row := range w.tiles {
 		for _, tile := range row {
 			if tile.terrainTile.CanChange() {
+				tile.sinceChange++
 				switch tile.terrainTile {
 				case Grass:
 					if tile.sinceChange > foodTime {
 						tile.terrainTile = Food
 						tile.sinceChange = 0
 						tile.quantity = 1
+						w.needsRedraw = true
 					}
 				case Food:
 					if tile.sinceChange > foodTime*3 || tile.quantity == 0 {
 						tile.terrainTile = Grass
 						tile.sinceChange = 0
 						tile.quantity = 0
+						w.needsRedraw = true
 					}
 					if frame%8 == 0 {
 						tile.quantity++
@@ -49,27 +53,30 @@ func (w *World) Update(frame int) {
 }
 
 func (w *World) Draw(win *pixelgl.Window) {
-	batch := pixel.NewBatch(&pixel.TrianglesData{}, w.baseSheet)
-	mat := pixel.IM
-	for r, row := range w.tiles {
-		for c, tile := range row {
-			var s *pixel.Sprite
-			switch tile.terrainTile {
-			case Grass:
-				s = w.grassSprite
-			case Food:
-				s = w.foodSprite
-			case Water:
-				s = w.waterSprite
-			default:
-				s = w.grassSprite
-			}
+	if w.needsRedraw {
+		w.batch.Clear()
+		mat := pixel.IM
+		for r, row := range w.tiles {
+			for c, tile := range row {
+				var s *pixel.Sprite
+				switch tile.terrainTile {
+				case Grass:
+					s = w.grassSprite
+				case Food:
+					s = w.foodSprite
+				case Water:
+					s = w.waterSprite
+				default:
+					s = w.grassSprite
+				}
 
-			mat2 := mat.Moved(win.Bounds().Min.Add(pixel.V(tileEdge*float64(r), tileEdge*float64(c))))
-			s.Draw(batch, mat2)
+				mat2 := mat.Moved(win.Bounds().Min.Add(pixel.V(tileEdge*float64(r), tileEdge*float64(c))))
+				s.Draw(w.batch, mat2)
+			}
 		}
+		w.needsRedraw = false
 	}
-	batch.Draw(win)
+	w.batch.Draw(win)
 }
 
 func createTiles(tl TerrainLayout) [][]*Tile {
@@ -95,11 +102,12 @@ type Config struct {
 // NewWorld will return a new initialized World object
 func NewWorld(cfg Config) (*World, error) {
 	w := &World{
-		baseSheet:   cfg.TilePicture,
 		grassSprite: pixel.NewSprite(cfg.TilePicture, pixel.R(0, tileEdge*2, tileEdge, tileEdge*3)),
 		waterSprite: pixel.NewSprite(cfg.TilePicture, pixel.R(tileEdge, tileEdge*2, tileEdge*2, tileEdge*3)),
 		foodSprite:  pixel.NewSprite(cfg.TilePicture, pixel.R(tileEdge*2, tileEdge*2, tileEdge*3, tileEdge*3)),
 		tiles:       createTiles(cfg.Layout),
+		needsRedraw: true,
+		batch:       pixel.NewBatch(&pixel.TrianglesData{}, cfg.TilePicture),
 	}
 	return w, nil
 }
