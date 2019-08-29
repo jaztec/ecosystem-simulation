@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"time"
 
 	"golang.org/x/image/colornames"
 
@@ -11,25 +12,42 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// Application holds all important variables and handles the application flow
-type Application struct {
-	win   *pixelgl.Window
-	world *world.World
+type ApplicationConfig struct {
+	Layout world.TerrainLayout
 }
 
-func (a *Application) update() {
-	a.win.Clear(colornames.Skyblue)
+// Application holds all important variables and handles the application flow
+type Application struct {
+	win    *pixelgl.Window
+	world  *world.World
+	lastDt time.Time
+}
+
+func (a *Application) update(frame int) {
+	// TODO improve this quick hack
+	frame++
+	if frame > 10 {
+		frame = 0
+	}
+	a.world.Update(frame)
 	a.draw()
 }
 
 func (a *Application) draw() {
-	go a.world.Draw(a.win)
+	a.win.Clear(colornames.Skyblue)
+	a.world.Draw(a.win)
 }
 
 // Run will run the application
 func (a *Application) Run(_ context.Context) {
+	a.lastDt = time.Now()
+	// TODO create some derived context
+	frame := 0
 	for !a.win.Closed() {
-		a.update()
+		// TODO fix delta time
+		_ = time.Since(a.lastDt).Seconds()
+		a.lastDt = time.Now()
+		a.update(frame)
 		a.win.Update()
 	}
 }
@@ -52,26 +70,26 @@ func createWindow() (*pixelgl.Window, error) {
 	return win, nil
 }
 
-func createWorld() (*world.World, error) {
+func createWorld(cfg ApplicationConfig) (*world.World, error) {
 	tiles, err := LoadPicture("./assets/sprites/tiles.png")
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error loading tiles: %w", err)
 	}
 
-	worldMap, err := world.NewWorld(world.Config{TilePicture: tiles})
+	worldMap, err := world.NewWorld(world.Config{TilePicture: tiles, Layout: cfg.Layout})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the world: %w", err)
 	}
 	return worldMap, nil
 }
 
-func NewApplication() (*Application, error) {
+func NewApplication(cfg ApplicationConfig) (*Application, error) {
 	win, err := createWindow()
 	if err != nil {
 		return nil, err
 	}
 
-	worldMap, err := createWorld()
+	worldMap, err := createWorld(cfg)
 	if err != nil {
 		return nil, err
 	}

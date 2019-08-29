@@ -2,7 +2,10 @@ package runtime
 
 import (
 	"image"
+	"math/rand"
 	"os"
+
+	"github.com/jaztec/ecosystem-simulation/world"
 
 	_ "image/png" // make sure we can decode PNG images
 
@@ -24,4 +27,17 @@ func LoadPicture(p string) (pixel.Picture, error) {
 	}
 
 	return pixel.PictureDataFromImage(img), nil
+}
+
+// GenerateWorldLayout will return some randomly generated terrain layout
+func GenerateWorldLayout(w, h int) world.TerrainLayout {
+	tl := make([][]world.TerrainTile, 0, h)
+	for x := 0; x < h; x++ {
+		r := make([]world.TerrainTile, 0, w)
+		for y := 0; y < w; y++ {
+			r = append(r, world.TerrainTile(rand.Intn(3)))
+		}
+		tl = append(tl, r)
+	}
+	return tl
 }

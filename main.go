@@ -8,7 +8,7 @@ import (
 )
 
 func run() {
-	app, err := runtime.NewApplication()
+	app, err := runtime.NewApplication(runtime.ApplicationConfig{Layout: runtime.GenerateWorldLayout(20, 15)})
 	if err != nil {
 		panic(err)
 	}
