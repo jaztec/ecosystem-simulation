@@ -28,16 +28,16 @@ type World struct {
 
 func (w *World) Update(ctx *runtime.AppContext) {
 	if ctx.Win().Pressed(pixelgl.KeyLeft) {
-		w.camera.Pos().X -= w.camera.Speed() * ctx.DeltaTime()
+		w.camera.SetPosX(w.camera.Pos().X - (w.camera.Speed() * ctx.DeltaTime()))
 	}
 	if ctx.Win().Pressed(pixelgl.KeyRight) {
-		w.camera.Pos().X += w.camera.Speed() * ctx.DeltaTime()
+		w.camera.SetPosX(w.camera.Pos().X + (w.camera.Speed() * ctx.DeltaTime()))
 	}
 	if ctx.Win().Pressed(pixelgl.KeyDown) {
-		w.camera.Pos().Y -= w.camera.Speed() * ctx.DeltaTime()
+		w.camera.SetPosY(w.camera.Pos().Y - (w.camera.Speed() * ctx.DeltaTime()))
 	}
 	if ctx.Win().Pressed(pixelgl.KeyUp) {
-		w.camera.Pos().Y += w.camera.Speed() * ctx.DeltaTime()
+		w.camera.SetPosY(w.camera.Pos().Y + (w.camera.Speed() * ctx.DeltaTime()))
 	}
 	for _, row := range w.tiles {
 		for _, tile := range row {
@@ -92,7 +92,7 @@ func (w *World) Draw(win *pixelgl.Window) {
 		w.needsRedraw = false
 	}
 	w.batch.Draw(win)
-	win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(*w.camera.Pos())))
+	win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(w.camera.Pos())))
 }
 
 func createTiles(tl TerrainLayout) [][]*Tile {
