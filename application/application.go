@@ -1,8 +1,10 @@
-package runtime
+package application
 
 import (
 	"context"
 	"time"
+
+	"github.com/jaztec/ecosystem-simulation/runtime"
 
 	"golang.org/x/image/colornames"
 
@@ -12,7 +14,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-type ApplicationConfig struct {
+type Config struct {
 	Layout world.TerrainLayout
 }
 
@@ -23,13 +25,8 @@ type Application struct {
 	lastDt time.Time
 }
 
-func (a *Application) update(frame int) {
-	// TODO improve this quick hack
-	frame++
-	if frame > 10 {
-		frame = 0
-	}
-	a.world.Update(frame)
+func (a *Application) update(ctx *runtime.AppContext) {
+	a.world.Update(ctx)
 	a.draw()
 }
 
@@ -39,15 +36,17 @@ func (a *Application) draw() {
 }
 
 // Run will run the application
-func (a *Application) Run(_ context.Context) {
+func (a *Application) Run(c context.Context) {
 	a.lastDt = time.Now()
-	// TODO create some derived context
-	frame := 0
+	ctx := runtime.FromContext(c, a.win)
+	var frame uint8 = 0
 	for !a.win.Closed() {
-		// TODO fix delta time
-		_ = time.Since(a.lastDt).Seconds()
+		dt := time.Since(a.lastDt).Seconds()
+		frame++
 		a.lastDt = time.Now()
-		a.update(frame)
+		ctx.SetDeltaTime(dt)
+		ctx.SetFrame(frame)
+		a.update(ctx)
 		a.win.Update()
 	}
 }
@@ -70,8 +69,8 @@ func createWindow() (*pixelgl.Window, error) {
 	return win, nil
 }
 
-func createWorld(cfg ApplicationConfig) (*world.World, error) {
-	tiles, err := LoadPicture("./assets/sprites/tiles.png")
+func createWorld(cfg Config) (*world.World, error) {
+	tiles, err := runtime.LoadPicture("./assets/sprites/tiles.png")
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error loading tiles: %w", err)
 	}
@@ -83,7 +82,7 @@ func createWorld(cfg ApplicationConfig) (*world.World, error) {
 	return worldMap, nil
 }
 
-func NewApplication(cfg ApplicationConfig) (*Application, error) {
+func NewApplication(cfg Config) (*Application, error) {
 	win, err := createWindow()
 	if err != nil {
 		return nil, err

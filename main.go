@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 
+	"github.com/jaztec/ecosystem-simulation/application"
+	"github.com/jaztec/ecosystem-simulation/world"
+
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/jaztec/ecosystem-simulation/runtime"
 )
 
 func run() {
-	app, err := runtime.NewApplication(runtime.ApplicationConfig{Layout: runtime.GenerateWorldLayout(20, 15)})
+	app, err := application.NewApplication(application.Config{Layout: world.GenerateWorldLayout(20, 15)})
 	if err != nil {
 		panic(err)
 	}

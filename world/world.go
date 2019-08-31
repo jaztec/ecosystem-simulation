@@ -3,6 +3,8 @@ package world
 import (
 	"math/rand"
 
+	"github.com/jaztec/ecosystem-simulation/runtime"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 )
@@ -20,10 +22,23 @@ type World struct {
 	foodSprite  *pixel.Sprite
 	tiles       [][]*Tile
 	batch       *pixel.Batch
+	camera      Camera
 	needsRedraw bool
 }
 
-func (w *World) Update(frame int) {
+func (w *World) Update(ctx *runtime.AppContext) {
+	if ctx.Win().Pressed(pixelgl.KeyLeft) {
+		w.camera.Pos().X -= w.camera.Speed() * ctx.DeltaTime()
+	}
+	if ctx.Win().Pressed(pixelgl.KeyRight) {
+		w.camera.Pos().X += w.camera.Speed() * ctx.DeltaTime()
+	}
+	if ctx.Win().Pressed(pixelgl.KeyDown) {
+		w.camera.Pos().Y -= w.camera.Speed() * ctx.DeltaTime()
+	}
+	if ctx.Win().Pressed(pixelgl.KeyUp) {
+		w.camera.Pos().Y += w.camera.Speed() * ctx.DeltaTime()
+	}
 	for _, row := range w.tiles {
 		for _, tile := range row {
 			if tile.terrainTile.CanChange() {
@@ -43,7 +58,7 @@ func (w *World) Update(frame int) {
 						tile.quantity = 0
 						w.needsRedraw = true
 					}
-					if frame%8 == 0 {
+					if ctx.Frame()%8 == 0 {
 						tile.quantity++
 					}
 				}
@@ -77,6 +92,7 @@ func (w *World) Draw(win *pixelgl.Window) {
 		w.needsRedraw = false
 	}
 	w.batch.Draw(win)
+	win.SetMatrix(pixel.IM.Moved(win.Bounds().Center().Sub(*w.camera.Pos())))
 }
 
 func createTiles(tl TerrainLayout) [][]*Tile {
@@ -91,6 +107,19 @@ func createTiles(tl TerrainLayout) [][]*Tile {
 		}
 	}
 	return tiles
+}
+
+// GenerateWorldLayout will return some randomly generated terrain layout
+func GenerateWorldLayout(w, h int) TerrainLayout {
+	tl := make([][]TerrainTile, 0, h)
+	for x := 0; x < h; x++ {
+		r := make([]TerrainTile, 0, w)
+		for y := 0; y < w; y++ {
+			r = append(r, TerrainTile(rand.Intn(3)))
+		}
+		tl = append(tl, r)
+	}
+	return tl
 }
 
 // Config holds some properties to create a new world from
@@ -108,6 +137,7 @@ func NewWorld(cfg Config) (*World, error) {
 		tiles:       createTiles(cfg.Layout),
 		needsRedraw: true,
 		batch:       pixel.NewBatch(&pixel.TrianglesData{}, cfg.TilePicture),
+		camera:      NewCamera(),
 	}
 	return w, nil
 }
