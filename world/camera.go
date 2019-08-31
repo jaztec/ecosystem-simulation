@@ -33,5 +33,5 @@ func (c *camera) Speed() float64 {
 }
 
 func NewCamera() Camera {
-	return &camera{pos: pixel.ZV, speed: 500.0}
+	return &camera{pos: pixel.ZV, speed: 1500.0}
 }
