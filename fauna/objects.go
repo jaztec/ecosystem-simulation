@@ -10,6 +10,12 @@ const (
 	spriteEdgeH = 60
 	spriteEdgeV = 75
 
+	StoppedIndex = 0
+	MovingRight  = 1
+	MovingLeft   = 2
+	MovingDown   = 3
+	MovingUp     = 4
+
 	Male   Gender = 0x01
 	Female Gender = 0x02
 
@@ -37,6 +43,7 @@ type Movable interface {
 	Position() pixel.Vec
 	Direction() Direction
 	MovingSpeed() int
+	State() uint8
 }
 
 type object struct {
@@ -81,6 +88,7 @@ type movable struct {
 	direction   Direction
 	movingSpeed int
 	position    pixel.Vec
+	state       uint8
 }
 
 func (m *movable) Direction() Direction {
@@ -93,6 +101,10 @@ func (m *movable) MovingSpeed() int {
 
 func (m *movable) Position() pixel.Vec {
 	return m.position
+}
+
+func (m *movable) State() uint8 {
+	return m.state
 }
 
 func extractSprites(p pixel.Picture) (set [5][4]*pixel.Sprite) {

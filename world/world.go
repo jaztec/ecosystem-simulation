@@ -67,7 +67,8 @@ func (w *World) Update(ctx *runtime.AppContext) {
 	}
 }
 
-func (w *World) Draw(win *pixelgl.Window) {
+func (w *World) Draw(ctx *runtime.AppContext) {
+	win := ctx.Win()
 	if w.needsRedraw {
 		w.batch.Clear()
 		mat := pixel.IM

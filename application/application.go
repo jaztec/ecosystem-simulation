@@ -31,12 +31,14 @@ type Application struct {
 
 func (a *Application) update(ctx *runtime.AppContext) {
 	a.world.Update(ctx)
-	a.draw()
+	a.herd.Update(ctx)
+	a.draw(ctx)
 }
 
-func (a *Application) draw() {
+func (a *Application) draw(ctx *runtime.AppContext) {
 	a.win.Clear(colornames.Skyblue)
-	a.world.Draw(a.win)
+	a.world.Draw(ctx)
+	a.herd.Draw(ctx)
 }
 
 // Run will run the application
@@ -111,8 +113,14 @@ func NewApplication(cfg Config) (*Application, error) {
 		return nil, err
 	}
 
+	herd, err := createHerd(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Application{
 		win:   win,
 		world: worldMap,
+		herd:  herd,
 	}, nil
 }

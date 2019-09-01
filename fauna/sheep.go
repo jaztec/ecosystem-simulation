@@ -26,6 +26,7 @@ func NewSheep() Sheep {
 			direction:   Direction(rand.Intn(4)),
 			movingSpeed: 0,
 			position:    pixel.ZV,
+			state:       0,
 		},
 	}
 }
