@@ -89,12 +89,12 @@ func createWorld(cfg Config) (*world.World, error) {
 }
 
 func createHerd(cfg Config) (*fauna.Herd, error) {
-	sheeps, err := runtime.LoadPicture("./assets/sprites/sheep.png")
+	sprite, err := runtime.LoadPicture("./assets/sprites/sheep.png")
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error loading sheeps: %w", err)
 	}
 
-	herd, err := fauna.NewHerd(fauna.HerdConfig{SheepPicture: sheeps})
+	herd, err := fauna.NewHerd(fauna.HerdConfig{SheepPicture: sprite})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the herd: %w", err)
 	}
