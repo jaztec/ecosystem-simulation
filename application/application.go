@@ -101,7 +101,7 @@ func createHerd(cfg Config) (*fauna.Herd, error) {
 	return herd, nil
 }
 
-func NewApplication(cfg Config) (*Application, error) {
+func New(cfg Config) (*Application, error) {
 	rand.Seed(int64(time.Now().Second()))
 	win, err := createWindow()
 	if err != nil {

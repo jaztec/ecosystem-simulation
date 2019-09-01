@@ -10,7 +10,7 @@ import (
 )
 
 func run() {
-	app, err := application.NewApplication(application.Config{Layout: world.GenerateWorldLayout(20, 15)})
+	app, err := application.New(application.Config{Layout: world.GenerateWorldLayout(20, 15)})
 	if err != nil {
 		panic(err)
 	}
