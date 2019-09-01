@@ -2,7 +2,10 @@ package application
 
 import (
 	"context"
+	"math/rand"
 	"time"
+
+	"github.com/jaztec/ecosystem-simulation/fauna"
 
 	"github.com/jaztec/ecosystem-simulation/runtime"
 
@@ -22,6 +25,7 @@ type Config struct {
 type Application struct {
 	win    *pixelgl.Window
 	world  *world.World
+	herd   *fauna.Herd
 	lastDt time.Time
 }
 
@@ -82,7 +86,21 @@ func createWorld(cfg Config) (*world.World, error) {
 	return worldMap, nil
 }
 
+func createHerd(cfg Config) (*fauna.Herd, error) {
+	sheeps, err := runtime.LoadPicture("./assets/sprites/sheep.png")
+	if err != nil {
+		return nil, xerrors.Errorf("fatal error loading sheeps: %w", err)
+	}
+
+	herd, err := fauna.NewHerd(fauna.HerdConfig{SheepPicture: sheeps})
+	if err != nil {
+		return nil, xerrors.Errorf("fatal error creating the herd: %w", err)
+	}
+	return herd, nil
+}
+
 func NewApplication(cfg Config) (*Application, error) {
+	rand.Seed(int64(time.Now().Second()))
 	win, err := createWindow()
 	if err != nil {
 		return nil, err
