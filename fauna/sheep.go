@@ -2,6 +2,7 @@ package fauna
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/faiface/pixel"
 )
@@ -9,24 +10,31 @@ import (
 type Sheep struct {
 	object
 	movable
+	dieable
 }
 
 func NewSheep() Sheep {
 	return Sheep{
 		object{
+			age:            0.0,
 			gender:         Gender(rand.Intn(2)),
-			food:           10,
-			water:          10,
-			reproduce:      20,
-			vision:         100 + rand.Intn(20),
-			speed:          5 + rand.Intn(5),
+			food:           60.0,
+			water:          30.0,
+			reproduce:      0.0,
+			vision:         float64(100 + rand.Intn(20)),
+			speed:          float64(5 + rand.Intn(5)),
 			attractiveness: Attractive(rand.Intn(3)),
 		},
 		movable{
 			direction:   Direction(rand.Intn(4)),
 			movingSpeed: 0,
 			position:    pixel.ZV,
-			state:       0,
+			step:        0,
+		},
+		dieable{
+			alive:  true,
+			reason: 0,
+			time:   time.Time{},
 		},
 	}
 }

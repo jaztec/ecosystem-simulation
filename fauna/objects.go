@@ -1,10 +1,15 @@
 package fauna
 
-import "github.com/faiface/pixel"
+import (
+	"time"
+
+	"github.com/faiface/pixel"
+)
 
 type Gender uint8
 type Attractive uint8
 type Direction uint8
+type ReasonOfDeath uint8
 
 const (
 	spriteEdgeH = 60
@@ -15,6 +20,12 @@ const (
 	MovingLeft   = 2
 	MovingDown   = 3
 	MovingUp     = 4
+
+	Not        ReasonOfDeath = 0
+	Starvation ReasonOfDeath = 1
+	Thirst     ReasonOfDeath = 2
+	Eaten      ReasonOfDeath = 3
+	Age        ReasonOfDeath = 4
 
 	Male   Gender = 0x01
 	Female Gender = 0x02
@@ -31,28 +42,36 @@ const (
 
 type Animal interface {
 	Gender() Gender
-	Food() int
-	Water() int
-	Reproduce() int
-	Vision() int
-	Speed() int
+	Food() float64
+	Water() float64
+	Reproduce() float64
+	Vision() float64
+	Speed() float64
 	Attractiveness() Attractive
+	Age() float64
 }
 
 type Movable interface {
 	Position() pixel.Vec
 	Direction() Direction
-	MovingSpeed() int
-	State() uint8
+	MovingSpeed() float64
+	Step() uint8
+}
+
+type Dieable interface {
+	Alive() bool
+	Reason() ReasonOfDeath
+	Time() time.Time
 }
 
 type object struct {
 	gender         Gender
-	food           int
-	water          int
-	reproduce      int
-	vision         int
-	speed          int
+	age            float64
+	food           float64
+	water          float64
+	reproduce      float64
+	vision         float64
+	speed          float64
 	attractiveness Attractive
 }
 
@@ -60,23 +79,27 @@ func (o *object) Gender() Gender {
 	return o.gender
 }
 
-func (o *object) Food() int {
+func (o *object) Age() float64 {
+	return o.age
+}
+
+func (o *object) Food() float64 {
 	return o.food
 }
 
-func (o *object) Water() int {
+func (o *object) Water() float64 {
 	return o.water
 }
 
-func (o *object) Reproduce() int {
+func (o *object) Reproduce() float64 {
 	return o.reproduce
 }
 
-func (o *object) Vision() int {
+func (o *object) Vision() float64 {
 	return o.vision
 }
 
-func (o *object) Speed() int {
+func (o *object) Speed() float64 {
 	return o.speed
 }
 
@@ -86,16 +109,16 @@ func (o *object) Attractiveness() Attractive {
 
 type movable struct {
 	direction   Direction
-	movingSpeed int
+	movingSpeed float64
 	position    pixel.Vec
-	state       uint8
+	step        uint8
 }
 
 func (m *movable) Direction() Direction {
 	return m.direction
 }
 
-func (m *movable) MovingSpeed() int {
+func (m *movable) MovingSpeed() float64 {
 	return m.movingSpeed
 }
 
@@ -103,8 +126,26 @@ func (m *movable) Position() pixel.Vec {
 	return m.position
 }
 
-func (m *movable) State() uint8 {
-	return m.state
+func (m *movable) Step() uint8 {
+	return m.step
+}
+
+type dieable struct {
+	alive  bool
+	reason ReasonOfDeath
+	time   time.Time
+}
+
+func (d *dieable) Alive() bool {
+	return d.alive
+}
+
+func (d *dieable) Reason() ReasonOfDeath {
+	return d.reason
+}
+
+func (d *dieable) Time() time.Time {
+	return d.time
 }
 
 func extractSprites(p pixel.Picture) (set [5][4]*pixel.Sprite) {

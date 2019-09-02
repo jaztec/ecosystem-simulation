@@ -88,13 +88,13 @@ func createWorld(cfg Config) (*world.World, error) {
 	return worldMap, nil
 }
 
-func createHerd(cfg Config) (*fauna.Herd, error) {
+func createHerd(win *pixelgl.Window) (*fauna.Herd, error) {
 	sprite, err := runtime.LoadPicture("./assets/sprites/sheep.png")
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error loading sheeps: %w", err)
 	}
 
-	herd, err := fauna.NewHerd(fauna.HerdConfig{SheepPicture: sprite})
+	herd, err := fauna.NewHerd(fauna.HerdConfig{SheepPicture: sprite, Bounds: win.Bounds()})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the herd: %w", err)
 	}
@@ -113,7 +113,7 @@ func New(cfg Config) (*Application, error) {
 		return nil, err
 	}
 
-	herd, err := createHerd(cfg)
+	herd, err := createHerd(win)
 	if err != nil {
 		return nil, err
 	}
