@@ -93,8 +93,8 @@ func NewHerd(cfg HerdConfig) (*Herd, error) {
 	var i int
 	for i < 50 {
 		s := NewSheep()
-		s.position.X = (cfg.Bounds.Max.X - cfg.Bounds.Min.X) * rand.Float64()
-		s.position.Y = (cfg.Bounds.Max.Y - cfg.Bounds.Min.Y) * rand.Float64()
+		s.position.X = (cfg.Bounds.Max.X - cfg.Bounds.Min.X) * (rand.Float64() + 0.5)
+		s.position.Y = (cfg.Bounds.Max.Y - cfg.Bounds.Min.Y) * (rand.Float64() + 0.5)
 		s.direction = Direction(rand.Intn(4))
 		s.gender = Gender(rand.Intn(2))
 		h.herd = append(h.herd, &s)
