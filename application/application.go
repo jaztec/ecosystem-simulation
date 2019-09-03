@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/jaztec/ecosystem-simulation/fauna"
@@ -38,7 +39,10 @@ func (a *Application) update(ctx runtime.AppContext) {
 		log.Printf("Clicked at pos %v", mouse)
 	}
 	a.world.Update(ctx)
-	a.herd.Update(ctx)
+	if ia := a.herd.Update(ctx); ia == false {
+		a.win.SetClosed(true)
+		return
+	}
 	a.draw(ctx)
 }
 
@@ -58,6 +62,8 @@ func (a *Application) Run(c context.Context) {
 	a.lastDt = time.Now()
 	ctx := runtime.FromContext(c, a.win, a.params())
 	var frame uint8 = 0
+	defer fauna.PrintStats(os.Stdout, a.herd.Stats())
+
 	for !a.win.Closed() {
 		dt := time.Since(a.lastDt).Seconds()
 		frame++

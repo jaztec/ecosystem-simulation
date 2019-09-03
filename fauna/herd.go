@@ -29,13 +29,24 @@ type Herd struct {
 	bounds  pixel.Rect
 }
 
-func (h *Herd) Update(ctx runtime.AppContext) {
+func (h *Herd) Stats() []Dieable {
+	r := make([]Dieable, 0, len(h.herd))
+	for _, s := range h.herd {
+		r = append(r, s)
+	}
+	return r
+}
+
+func (h *Herd) Update(ctx runtime.AppContext) (inAction bool) {
+	inAction = true
+	var deaths int
 	dt := ctx.GetValue("deltaTime").(float64)
 	wo := ctx.GetValue("world").(*world.World)
 	frame := ctx.GetValue("frame").(uint8)
 	for i := 0; i < len(h.herd); i++ {
 		sheep := h.herd[i]
 		if !sheep.Alive() {
+			deaths++
 			continue
 		}
 		sheep.food -= dt
@@ -86,6 +97,11 @@ func (h *Herd) Update(ctx runtime.AppContext) {
 			}
 		}
 	}
+
+	if deaths >= len(h.herd) {
+		inAction = false
+	}
+	return
 }
 
 func (h *Herd) Draw(ctx runtime.AppContext) {

@@ -1,6 +1,8 @@
 package fauna
 
 import (
+	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"time"
@@ -12,6 +14,44 @@ type Gender uint8
 type Attractive uint8
 type Direction uint8
 type ReasonOfDeath uint8
+
+// TODO Fix this function, just use []byte
+func PrintStats(w io.Writer, animals []Dieable) {
+	lines := make(map[ReasonOfDeath]int, 5)
+	var deaths []Dieable
+
+	_, _ = fmt.Fprintf(w, "|%24s|\n", "Printing list of deaths")
+	_, _ = fmt.Fprintf(w, "|%12s|%12d|\n", "no. animals", len(animals))
+	_, _ = fmt.Fprintf(w, "|%12s|%12s|\n", "============", "============")
+	_, _ = fmt.Fprintf(w, "|%12s|%12s|\n", "reason", "quantity")
+	_, _ = fmt.Fprintf(w, "|%12s|%12s|\n", "============", "============")
+
+	for _, a := range animals {
+		lines[a.Reason()]++
+		deaths = append(deaths, a)
+	}
+
+	for k, l := range lines {
+		_, _ = fmt.Fprintf(w, "|%12s|%12d|\n", k, l)
+	}
+}
+
+func (rof ReasonOfDeath) String() string {
+	var s string
+	switch rof {
+	case Starvation:
+		s = "starvation"
+	case Thirst:
+		s = "thirst"
+	case Eaten:
+		s = "eaten"
+	case Age:
+		s = "age"
+	case Not:
+		s = "not"
+	}
+	return s
+}
 
 const (
 	spriteEdgeH = 60
@@ -68,6 +108,7 @@ type Movable interface {
 }
 
 type Dieable interface {
+	Animal
 	Alive() bool
 	Reason() ReasonOfDeath
 	Time() time.Time
