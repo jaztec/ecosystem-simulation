@@ -122,6 +122,7 @@ func New(cfg Config) (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Bounds of win are %v", win.Bounds())
 
 	worldMap, err := createWorld(cfg, win)
 	if err != nil {

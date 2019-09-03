@@ -53,7 +53,8 @@ func (w *World) Bounds() pixel.Rect {
 	}
 	x := float64(len(w.tiles)) * tileEdge
 	y := float64(len(w.tiles[0])) * tileEdge
-	return pixel.R(0, 0, x, y)
+	// using tileEdge/2 because edges are placed centered
+	return pixel.R(-tileEdge/2, -tileEdge/2, x-tileEdge/2, y-tileEdge/2)
 }
 
 func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TileTypes {
