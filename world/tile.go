@@ -29,5 +29,14 @@ func (tt TerrainTile) CanChange() (canIt bool) {
 type Tile struct {
 	terrainTile TerrainTile
 	sinceChange int
-	quantity    int
+	quantity    float64
+}
+
+func (t *Tile) DeductQuantity(v float64) float64 {
+	if r := t.quantity; r < v {
+		t.quantity = 0.0
+		return r
+	}
+	t.quantity -= v
+	return v
 }

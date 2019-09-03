@@ -1,6 +1,6 @@
 package runtime
 
 type Critters interface {
-	Update(*AppContext)
-	Draw(*AppContext)
+	Update(AppContext)
+	Draw(AppContext)
 }

@@ -4,8 +4,16 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/faiface/pixel"
 	"github.com/jaztec/ecosystem-simulation/runtime"
+
+	"github.com/jaztec/ecosystem-simulation/world"
+
+	"github.com/faiface/pixel"
+)
+
+const (
+	maxWater = 10.0
+	maxFood  = 10.0
 )
 
 type HerdConfig struct {
@@ -21,36 +29,57 @@ type Herd struct {
 	bounds  pixel.Rect
 }
 
-func (h *Herd) Update(ctx *runtime.AppContext) {
+func (h *Herd) Update(ctx runtime.AppContext) {
+	dt := ctx.GetValue("deltaTime").(float64)
+	wo := ctx.GetValue("world").(*world.World)
+	frame := ctx.GetValue("frame").(uint8)
 	for i := 0; i < len(h.herd); i++ {
 		sheep := h.herd[i]
 		if !sheep.Alive() {
 			continue
 		}
-		sheep.food -= ctx.DeltaTime()
-		sheep.water -= ctx.DeltaTime()
-		sheep.reproduce += ctx.DeltaTime()
-		sheep.age += ctx.DeltaTime()
+		sheep.food -= dt
+		sheep.water -= dt
+		sheep.reproduce += dt
+		sheep.age += dt
 
 		if sheep.water <= 0 {
 			sheep.alive = false
 			sheep.reason = Thirst
 			sheep.time = time.Time{}
+			return
 		}
 		if sheep.food <= 0 {
 			sheep.alive = false
 			sheep.reason = Starvation
 			sheep.time = time.Time{}
+			return
 		}
 		if sheep.age >= float64(120)+float64(rand.Intn(50)) {
 			sheep.alive = false
 			sheep.reason = Age
 			sheep.time = time.Time{}
+			return
 		}
 
-		randomMovement(sheep, h.bounds)
+		tip := wo.TilesInProximity(sheep.Position(), sheep.Vision())
+		if sheep.water < (maxWater/100.0)*30.0 {
+			if ok, _, onSpot := tip.HasTileType(world.Water); ok || onSpot {
+				if onSpot {
+					sheep.water = maxWater
+				}
+			}
+		} else if sheep.food < (maxFood/100.0)*30.0 {
+			if ok, tt, onSpot := tip.HasTileType(world.Water); ok || onSpot {
+				if onSpot {
+					sheep.food += tt.Tile.DeductQuantity(maxFood - sheep.food)
+				}
+			}
+		} else {
+			randomMovement(sheep, h.bounds)
+		}
 
-		if ctx.Frame()%8 == 0 {
+		if frame%8 == 0 {
 			sheep.step++
 			if sheep.step > 3 {
 				sheep.step = 0
@@ -59,7 +88,7 @@ func (h *Herd) Update(ctx *runtime.AppContext) {
 	}
 }
 
-func (h *Herd) Draw(ctx *runtime.AppContext) {
+func (h *Herd) Draw(ctx runtime.AppContext) {
 	h.batch.Clear()
 	win := ctx.Win()
 	mat := pixel.IM

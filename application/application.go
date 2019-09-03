@@ -30,7 +30,7 @@ type Application struct {
 	lastDt time.Time
 }
 
-func (a *Application) update(ctx *runtime.AppContext) {
+func (a *Application) update(ctx runtime.AppContext) {
 	// TODO This is a test log line
 	if ctx.Win().JustPressed(pixelgl.MouseButtonLeft) {
 		camPos := pixel.IM.Scaled(a.world.Camera().Pos(), 1).Moved(ctx.Win().Bounds().Center().Sub(a.world.Camera().Pos()))
@@ -42,23 +42,29 @@ func (a *Application) update(ctx *runtime.AppContext) {
 	a.draw(ctx)
 }
 
-func (a *Application) draw(ctx *runtime.AppContext) {
+func (a *Application) draw(ctx runtime.AppContext) {
 	a.win.Clear(colornames.Skyblue)
 	a.world.Draw(ctx)
 	a.herd.Draw(ctx)
 }
 
+func (a *Application) params() map[string]interface{} {
+	params := make(map[string]interface{}, 0)
+	return params
+}
+
 // Run will run the application
 func (a *Application) Run(c context.Context) {
 	a.lastDt = time.Now()
-	ctx := runtime.FromContext(c, a.win)
+	ctx := runtime.FromContext(c, a.win, a.params())
 	var frame uint8 = 0
 	for !a.win.Closed() {
 		dt := time.Since(a.lastDt).Seconds()
 		frame++
 		a.lastDt = time.Now()
-		ctx.SetDeltaTime(dt)
-		ctx.SetFrame(frame)
+		ctx.SetValue("deltaTime", dt)
+		ctx.SetValue("frame", frame)
+		ctx.SetValue("world", a.world)
 		a.update(ctx)
 		a.win.Update()
 	}

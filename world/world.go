@@ -16,20 +16,27 @@ const (
 type TerrainLayout [][]TerrainTile
 
 type TileType struct {
-	Terrain TerrainTile
-	Pos     pixel.Vec
+	Pos  pixel.Vec
+	Tile *Tile
 }
 
-type TileTypes []TileType
+type TilesInProximity struct {
+	On        TileType
+	Proximity []TileType
+}
 
-func (tt TileTypes) HasTileType(terrain TerrainTile) (bool, pixel.Vec) {
-	for _, t := range tt {
-		if t.Terrain == terrain {
-			return true, t.Pos
+func (tip TilesInProximity) HasTileType(terrain TerrainTile) (bool, TileType, bool) {
+	// check if on-spot
+	if tip.On.Tile.terrainTile == terrain {
+		return true, tip.On, true
+	}
+	for _, tt := range tip.Proximity {
+		if tt.Tile.terrainTile == terrain {
+			return true, tt, false
 		}
 	}
 
-	return false, pixel.ZV
+	return false, TileType{}, false
 }
 
 // World holds all data and functions for the simulation surroundings
@@ -57,32 +64,49 @@ func (w *World) Bounds() pixel.Rect {
 	return pixel.R(-tileEdge/2, -tileEdge/2, x-tileEdge/2, y-tileEdge/2)
 }
 
-func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TileTypes {
-	r := len(w.tiles) - int(pos.Y/tileEdge)
+func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TilesInProximity {
+	r := len(w.tiles) - int(pos.Y/tileEdge) - 1
+	if r < 0 {
+		r = 0
+	}
 	row := w.tiles[r]
-	c := len(row) - int(pos.X/tileEdge)
+	c := len(row) - int(pos.X/tileEdge) - 1
+	if c < 0 {
+		c = 0
+	}
 	tile := row[c]
+	// auto-set max foreseeable range
+	proximity := make([]TileType, 0, 8)
 
-	return []TileType{
-		{
-			Terrain: tile.terrainTile,
-			Pos:     pos,
+	//// do a simple perimeter check
+	//minX := pos.X - radius
+	//maxX := pos.X + radius
+	//minY := pos.Y - radius
+	//maxY := pos.Y + radius
+
+	return TilesInProximity{
+		On: TileType{
+			Pos:  pos,
+			Tile: tile,
 		},
+		Proximity: proximity,
 	}
 }
 
-func (w *World) Update(ctx *runtime.AppContext) {
+func (w *World) Update(ctx runtime.AppContext) {
+	dt := ctx.GetValue("deltaTime").(float64)
+
 	if ctx.Win().Pressed(pixelgl.KeyLeft) {
-		w.camera.SetPosX(w.camera.Pos().X - (w.camera.Speed() * ctx.DeltaTime()))
+		w.camera.SetPosX(w.camera.Pos().X - (w.camera.Speed() * dt))
 	}
 	if ctx.Win().Pressed(pixelgl.KeyRight) {
-		w.camera.SetPosX(w.camera.Pos().X + (w.camera.Speed() * ctx.DeltaTime()))
+		w.camera.SetPosX(w.camera.Pos().X + (w.camera.Speed() * dt))
 	}
 	if ctx.Win().Pressed(pixelgl.KeyDown) {
-		w.camera.SetPosY(w.camera.Pos().Y - (w.camera.Speed() * ctx.DeltaTime()))
+		w.camera.SetPosY(w.camera.Pos().Y - (w.camera.Speed() * dt))
 	}
 	if ctx.Win().Pressed(pixelgl.KeyUp) {
-		w.camera.SetPosY(w.camera.Pos().Y + (w.camera.Speed() * ctx.DeltaTime()))
+		w.camera.SetPosY(w.camera.Pos().Y + (w.camera.Speed() * dt))
 	}
 	for _, row := range w.tiles {
 		for _, tile := range row {
@@ -103,7 +127,7 @@ func (w *World) Update(ctx *runtime.AppContext) {
 						tile.quantity = 0
 						w.needsRedraw = true
 					}
-					if ctx.Frame()%8 == 0 {
+					if ctx.GetValue("frame").(uint8)%8 == 0 {
 						tile.quantity++
 					}
 				}
@@ -112,7 +136,7 @@ func (w *World) Update(ctx *runtime.AppContext) {
 	}
 }
 
-func (w *World) Draw(ctx *runtime.AppContext) {
+func (w *World) Draw(ctx runtime.AppContext) {
 	win := ctx.Win()
 	if w.needsRedraw {
 		w.batch.Clear()
