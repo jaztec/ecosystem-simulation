@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"log"
 	"math/rand"
 	"time"
 
@@ -30,6 +31,12 @@ type Application struct {
 }
 
 func (a *Application) update(ctx *runtime.AppContext) {
+	// TODO This is a test log line
+	if ctx.Win().JustPressed(pixelgl.MouseButtonLeft) {
+		camPos := pixel.IM.Scaled(a.world.Camera().Pos(), 1).Moved(ctx.Win().Bounds().Center().Sub(a.world.Camera().Pos()))
+		mouse := camPos.Unproject(ctx.Win().MousePosition())
+		log.Printf("Clicked at pos %v", mouse)
+	}
 	a.world.Update(ctx)
 	a.herd.Update(ctx)
 	a.draw(ctx)
@@ -75,26 +82,34 @@ func createWindow() (*pixelgl.Window, error) {
 	return win, nil
 }
 
-func createWorld(cfg Config) (*world.World, error) {
+func createWorld(cfg Config, win *pixelgl.Window) (*world.World, error) {
 	tiles, err := runtime.LoadPicture("./assets/sprites/tiles.png")
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error loading tiles: %w", err)
 	}
 
-	worldMap, err := world.NewWorld(world.Config{TilePicture: tiles, Layout: cfg.Layout})
+	worldMap, err := world.NewWorld(world.Config{
+		TilePicture: tiles,
+		Layout:      cfg.Layout,
+		CamPosition: win.Bounds().Center(),
+	})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the world: %w", err)
 	}
 	return worldMap, nil
 }
 
-func createHerd(win *pixelgl.Window) (*fauna.Herd, error) {
+func createHerd(bounds pixel.Rect) (*fauna.Herd, error) {
 	sprite, err := runtime.LoadPicture("./assets/sprites/sheep.png")
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error loading sheeps: %w", err)
 	}
 
-	herd, err := fauna.NewHerd(fauna.HerdConfig{SheepPicture: sprite, Bounds: win.Bounds()})
+	herd, err := fauna.NewHerd(fauna.HerdConfig{
+		SheepPicture:  sprite,
+		Bounds:        bounds,
+		NumberOfSheep: 100,
+	})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the herd: %w", err)
 	}
@@ -108,12 +123,13 @@ func New(cfg Config) (*Application, error) {
 		return nil, err
 	}
 
-	worldMap, err := createWorld(cfg)
+	worldMap, err := createWorld(cfg, win)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Bounds of world are %v", worldMap.Bounds())
 
-	herd, err := createHerd(win)
+	herd, err := createHerd(worldMap.Bounds())
 	if err != nil {
 		return nil, err
 	}

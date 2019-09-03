@@ -9,14 +9,16 @@ import (
 )
 
 type HerdConfig struct {
-	SheepPicture pixel.Picture
-	Bounds       pixel.Rect
+	SheepPicture  pixel.Picture
+	Bounds        pixel.Rect
+	NumberOfSheep int
 }
 
 type Herd struct {
 	sprites [5][4]*pixel.Sprite
 	herd    []*Sheep
 	batch   *pixel.Batch
+	bounds  pixel.Rect
 }
 
 func (h *Herd) Update(ctx *runtime.AppContext) {
@@ -45,6 +47,15 @@ func (h *Herd) Update(ctx *runtime.AppContext) {
 			sheep.reason = Age
 			sheep.time = time.Time{}
 		}
+
+		randomMovement(sheep, h.bounds)
+
+		if ctx.Frame()%8 == 0 {
+			sheep.step++
+			if sheep.step > 3 {
+				sheep.step = 0
+			}
+		}
 	}
 }
 
@@ -59,7 +70,7 @@ func (h *Herd) Draw(ctx *runtime.AppContext) {
 
 		var s *pixel.Sprite
 
-		if sheep.MovingSpeed() == 0 {
+		if sheep.MovingSpeedX() == 0 {
 			s = h.sprites[StoppedIndex][int(sheep.Direction())]
 		} else {
 			switch sheep.Direction() {
@@ -88,13 +99,14 @@ func NewHerd(cfg HerdConfig) (*Herd, error) {
 		sprites: extractSprites(cfg.SheepPicture),
 		herd:    make([]*Sheep, 0),
 		batch:   pixel.NewBatch(&pixel.TrianglesData{}, cfg.SheepPicture),
+		bounds:  cfg.Bounds,
 	}
 
 	var i int
-	for i < 50 {
+	for i < cfg.NumberOfSheep {
 		s := NewSheep()
-		s.position.X = (cfg.Bounds.Max.X - cfg.Bounds.Min.X) * (rand.Float64() + 0.5)
-		s.position.Y = (cfg.Bounds.Max.Y - cfg.Bounds.Min.Y) * (rand.Float64() + 0.5)
+		s.position.X = float64(rand.Intn(int(cfg.Bounds.Max.X)))
+		s.position.Y = float64(rand.Intn(int(cfg.Bounds.Max.Y)))
 		s.direction = Direction(rand.Intn(4))
 		s.gender = Gender(rand.Intn(2))
 		h.herd = append(h.herd, &s)

@@ -15,6 +15,23 @@ const (
 
 type TerrainLayout [][]TerrainTile
 
+type TileType struct {
+	Terrain TerrainTile
+	Pos     pixel.Vec
+}
+
+type TileTypes []TileType
+
+func (tt TileTypes) HasTileType(terrain TerrainTile) (bool, pixel.Vec) {
+	for _, t := range tt {
+		if t.Terrain == terrain {
+			return true, t.Pos
+		}
+	}
+
+	return false, pixel.ZV
+}
+
 // World holds all data and functions for the simulation surroundings
 type World struct {
 	grassSprite *pixel.Sprite
@@ -24,6 +41,33 @@ type World struct {
 	batch       *pixel.Batch
 	camera      Camera
 	needsRedraw bool
+}
+
+func (w *World) Camera() Camera {
+	return w.camera
+}
+
+func (w *World) Bounds() pixel.Rect {
+	if len(w.tiles) == 0 {
+		return pixel.Rect{}
+	}
+	x := float64(len(w.tiles)) * tileEdge
+	y := float64(len(w.tiles[0])) * tileEdge
+	return pixel.R(0, 0, x, y)
+}
+
+func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TileTypes {
+	r := len(w.tiles) - int(pos.Y/tileEdge)
+	row := w.tiles[r]
+	c := len(row) - int(pos.X/tileEdge)
+	tile := row[c]
+
+	return []TileType{
+		{
+			Terrain: tile.terrainTile,
+			Pos:     pos,
+		},
+	}
 }
 
 func (w *World) Update(ctx *runtime.AppContext) {
@@ -127,6 +171,7 @@ func GenerateWorldLayout(w, h int) TerrainLayout {
 type Config struct {
 	TilePicture pixel.Picture
 	Layout      TerrainLayout
+	CamPosition pixel.Vec
 }
 
 // NewWorld will return a new initialized World object
@@ -138,7 +183,7 @@ func NewWorld(cfg Config) (*World, error) {
 		tiles:       createTiles(cfg.Layout),
 		needsRedraw: true,
 		batch:       pixel.NewBatch(&pixel.TrianglesData{}, cfg.TilePicture),
-		camera:      NewCamera(),
+		camera:      NewCamera(cfg.CamPosition),
 	}
 	return w, nil
 }
