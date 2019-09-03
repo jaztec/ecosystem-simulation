@@ -15,11 +15,11 @@ const (
 	spriteEdgeH = 60
 	spriteEdgeV = 75
 
-	StoppedIndex = 0
-	MovingRight  = 1
+	StoppedIndex = 4
+	MovingRight  = 3
 	MovingLeft   = 2
-	MovingDown   = 3
-	MovingUp     = 4
+	MovingDown   = 1
+	MovingUp     = 0
 
 	Not        ReasonOfDeath = 0
 	Starvation ReasonOfDeath = 1
