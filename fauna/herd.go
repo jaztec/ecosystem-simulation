@@ -78,7 +78,7 @@ func (h *Herd) Update(ctx runtime.AppContext) {
 				}
 			}
 		} else if sheep.food < (maxFood/100.0)*30.0 {
-			if ok, tt, onSpot := tip.HasTileType(world.Water); ok || onSpot {
+			if ok, tt, onSpot := tip.HasTileType(world.Food); ok || onSpot {
 				if onSpot {
 					sheep.food += tt.Tile.DeductQuantity(maxFood - sheep.food)
 				}
