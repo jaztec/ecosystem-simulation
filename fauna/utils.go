@@ -18,7 +18,6 @@ type ReasonOfDeath uint8
 // TODO Fix this function, just use []byte
 func PrintStats(w io.Writer, animals []Dieable) {
 	lines := make(map[ReasonOfDeath]int, 5)
-	var deaths []Dieable
 
 	_, _ = fmt.Fprintf(w, "|%24s|\n", "Printing list of deaths")
 	_, _ = fmt.Fprintf(w, "|%12s|%12d|\n", "no. animals", len(animals))
@@ -28,7 +27,6 @@ func PrintStats(w io.Writer, animals []Dieable) {
 
 	for _, a := range animals {
 		lines[a.Reason()]++
-		deaths = append(deaths, a)
 	}
 
 	for k, l := range lines {
@@ -105,6 +103,8 @@ type Movable interface {
 	SetMovingSpeedX(float64)
 	SetMovingSpeedY(float64)
 	Step() uint8
+	TimeIdle() float64
+	SetTimeIdle(float64)
 }
 
 type Dieable interface {
@@ -163,6 +163,7 @@ type movable struct {
 	movingSpeedY float64
 	position     pixel.Vec
 	step         uint8
+	timeIdle     float64
 }
 
 func (m *movable) Direction() Direction {
@@ -215,6 +216,14 @@ func (m *movable) Step() uint8 {
 	return m.step
 }
 
+func (m *movable) TimeIdle() float64 {
+	return m.timeIdle
+}
+
+func (m *movable) SetTimeIdle(ti float64) {
+	m.timeIdle = ti
+}
+
 type dieable struct {
 	alive  bool
 	reason ReasonOfDeath
@@ -234,43 +243,53 @@ func (d *dieable) Time() time.Time {
 }
 
 func randomMovement(m Movable, bounds pixel.Rect) Movable {
+	m.SetTimeIdle(m.TimeIdle() + 1)
+	changer := float64(75 + rand.Intn(50))
 	if m.MovingSpeedX() == 0.0 && m.MovingSpeedY() == 0.0 {
 		// optionally start moving again
-		if rand.Intn(16) == 0 {
+		if m.TimeIdle() > changer {
 			m.SetMovingSpeedX(m.Speed())
 			m.SetMovingSpeedY(m.Speed())
+			m.SetTimeIdle(0)
 		}
 	} else {
 		// calculate and apply delta
 		delta := pixel.ZV
-		// optionally change direction
-		if rand.Intn(16) == 0 {
-			var speeds [2]float64
-			speeds[0] = float64(rand.Intn(int(m.Speed())))
-			speeds[1] = float64(rand.Intn(int(m.Speed())))
-			// possibly one of them is inverted
-			if rand.Intn(1) == 0 {
-				inv := rand.Intn(1)
-				speeds[inv] = -speeds[inv]
+		if m.TimeIdle() > changer {
+			o := rand.Intn(3)
+			switch o {
+			case 0:
+				// stop moving
+				m.SetMovingSpeedX(0.0)
+				m.SetMovingSpeedY(0.0)
+				m.SetTimeIdle(0)
+			case 1:
+				// change direction
+				var speeds [2]float64
+				speeds[0] = m.Speed() * rand.Float64()
+				speeds[1] = m.Speed() * rand.Float64()
+				// possibly one of them is inverted
+				if rand.Intn(1) == 0 {
+					inv := rand.Intn(1)
+					speeds[inv] = -speeds[inv]
+				}
+
+				m.SetMovingSpeedX(speeds[0])
+				m.SetMovingSpeedY(speeds[1])
+				m.SetTimeIdle(0)
+			case 2:
+				// do nothing
 			}
-			m.SetMovingSpeedX(speeds[0])
-			m.SetMovingSpeedY(speeds[1])
-		} else {
-			delta.X += m.MovingSpeedX()
-			delta.Y += m.MovingSpeedX()
 		}
+
+		delta.X = m.MovingSpeedX()
+		delta.Y = m.MovingSpeedY()
+
 		m.SetPosition(m.Position().Add(delta))
-
-		// check if we are still in bounds
-		checkOutBounds(m, bounds)
-
-		// optionally stop moving
-		if rand.Intn(16) == 0 {
-			m.SetMovingSpeedX(0.0)
-			m.SetMovingSpeedY(0.0)
-		}
 	}
 
+	// check if we are still in bounds
+	checkOutBounds(m, bounds)
 	m.SetDirection(m.CalcDirection())
 
 	return m

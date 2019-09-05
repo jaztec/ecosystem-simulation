@@ -22,7 +22,7 @@ func NewSheep() Sheep {
 			water:          30.0,
 			reproduce:      0.0,
 			vision:         float64(100 + rand.Intn(20)),
-			speed:          float64(1 + rand.Intn(5)),
+			speed:          float64(1 + rand.Intn(2)),
 			attractiveness: Attractive(rand.Intn(3)),
 		},
 		movable{

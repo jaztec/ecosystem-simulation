@@ -1,3 +1,3 @@
 package fauna
 
-type wolf struct{}
+type Wolf struct{}

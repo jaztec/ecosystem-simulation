@@ -120,7 +120,7 @@ func createHerd(bounds pixel.Rect) (*fauna.Herd, error) {
 	herd, err := fauna.NewHerd(fauna.HerdConfig{
 		SheepPicture:  sprite,
 		Bounds:        bounds,
-		NumberOfSheep: 100,
+		NumberOfSheep: 15,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the herd: %w", err)

@@ -9,6 +9,6 @@ type PackConfig struct {
 
 type Pack struct {
 	sprites [5][4]*pixel.Sprite
-	pack    []*Sheep
+	pack    []*Wolf
 	batch   *pixel.Batch
 }
