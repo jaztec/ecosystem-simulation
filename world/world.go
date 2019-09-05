@@ -15,30 +15,6 @@ const (
 
 type TerrainLayout [][]TerrainTile
 
-type TileType struct {
-	Pos  pixel.Vec
-	Tile *Tile
-}
-
-type TilesInProximity struct {
-	On        TileType
-	Proximity []TileType
-}
-
-func (tip TilesInProximity) HasTileType(terrain TerrainTile) (bool, TileType, bool) {
-	// check if on-spot
-	if tip.On.Tile.terrainTile == terrain {
-		return true, tip.On, true
-	}
-	for _, tt := range tip.Proximity {
-		if tt.Tile.terrainTile == terrain {
-			return true, tt, false
-		}
-	}
-
-	return false, TileType{}, false
-}
-
 // World holds all data and functions for the simulation surroundings
 type World struct {
 	grassSprite *pixel.Sprite
@@ -89,10 +65,7 @@ func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TilesInProximity
 	proximity := make([]TileType, 0, 8)
 
 	//// do a simple perimeter check
-	//minX := pos.X - radius
-	//maxX := pos.X + radius
-	//minY := pos.Y - radius
-	//maxY := pos.Y + radius
+	//// TODO fix this
 
 	return TilesInProximity{
 		On: TileType{
@@ -179,10 +152,11 @@ func createTiles(tl TerrainLayout) [][]*Tile {
 	tiles := make([][]*Tile, 0, len(tl))
 	for i, r := range tl {
 		tiles = append(tiles, make([]*Tile, 0, len(r)))
-		for _, tt := range r {
+		for x, tt := range r {
 			tiles[i] = append(tiles[i], &Tile{
 				terrainTile: tt,
 				sinceChange: rand.Intn(foodTime),
+				center:      pixel.V((float64(i)*tileEdge)-(tileEdge/2), (float64(x)*tileEdge)-(tileEdge/2)),
 			})
 		}
 	}

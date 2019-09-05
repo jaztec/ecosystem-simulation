@@ -1,6 +1,10 @@
 package world
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/faiface/pixel"
+)
 
 const (
 	tileEdge float64 = 150
@@ -28,10 +32,35 @@ func (tt TerrainTile) CanChange() (canIt bool) {
 	return
 }
 
+type TileType struct {
+	Pos  pixel.Vec
+	Tile *Tile
+}
+
+type TilesInProximity struct {
+	On        TileType
+	Proximity []TileType
+}
+
+func (tip TilesInProximity) HasTileType(terrain TerrainTile) (bool, TileType, bool) {
+	// check if on-spot
+	if tip.On.Tile.terrainTile == terrain {
+		return true, tip.On, true
+	}
+	for _, tt := range tip.Proximity {
+		if tt.Tile.terrainTile == terrain {
+			return true, tt, false
+		}
+	}
+
+	return false, TileType{}, false
+}
+
 type Tile struct {
 	terrainTile TerrainTile
 	sinceChange int
 	quantity    float64
+	center      pixel.Vec
 }
 
 func (t *Tile) String() string {
@@ -44,7 +73,15 @@ func (t *Tile) String() string {
 	case Food:
 		tt = "food"
 	}
-	return fmt.Sprintf("Tile\n========\nType: %s\n qty: %f\n\n", tt, t.quantity)
+	return fmt.Sprintf("Tile\n========\ntype: %s\nqty: %f\npos: %s\n========\n", tt, t.quantity, t.center)
+}
+
+func (t *Tile) Terrain() TerrainTile {
+	return t.terrainTile
+}
+
+func (t *Tile) Center() pixel.Vec {
+	return t.center
 }
 
 func (t *Tile) DeductQuantity(v float64) float64 {

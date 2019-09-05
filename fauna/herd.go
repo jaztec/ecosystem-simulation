@@ -71,17 +71,20 @@ func (h *Herd) Update(ctx runtime.AppContext) {
 		}
 
 		tip := wo.TilesInProximity(sheep.Position(), sheep.Vision())
+		switch tip.On.Tile.Terrain() {
+		case world.Food:
+			sheep.food += tip.On.Tile.DeductQuantity(maxFood - sheep.Food())
+		case world.Water:
+			sheep.water += maxWater - sheep.Water()
+		}
+
 		if sheep.water < (maxWater/100.0)*30.0 {
 			if ok, _, onSpot := tip.HasTileType(world.Water); ok || onSpot {
-				if onSpot {
-					sheep.water = maxWater
-				}
+				// head for the water
 			}
 		} else if sheep.food < (maxFood/100.0)*30.0 {
-			if ok, tt, onSpot := tip.HasTileType(world.Food); ok || onSpot {
-				if onSpot {
-					sheep.food += tt.Tile.DeductQuantity(maxFood - sheep.food)
-				}
+			if ok, _, onSpot := tip.HasTileType(world.Food); ok || onSpot {
+				// head for the food
 			}
 		} else {
 			randomMovement(sheep, h.bounds)
