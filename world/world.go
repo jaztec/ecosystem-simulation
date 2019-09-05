@@ -58,8 +58,8 @@ func (w *World) Bounds() pixel.Rect {
 	if len(w.tiles) == 0 {
 		return pixel.Rect{}
 	}
-	x := float64(len(w.tiles)) * tileEdge
-	y := float64(len(w.tiles[0])) * tileEdge
+	y := float64(len(w.tiles)) * tileEdge
+	x := float64(len(w.tiles[0])) * tileEdge
 	// using tileEdge/2 because edges are placed centered
 	return pixel.R(-tileEdge/2, -tileEdge/2, x-tileEdge/2, y-tileEdge/2)
 }
