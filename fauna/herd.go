@@ -37,16 +37,13 @@ func (h *Herd) Stats() []Dieable {
 	return r
 }
 
-func (h *Herd) Update(ctx runtime.AppContext) (inAction bool) {
-	inAction = true
-	var deaths int
+func (h *Herd) Update(ctx runtime.AppContext) {
 	dt := ctx.GetValue("deltaTime").(float64)
 	wo := ctx.GetValue("world").(*world.World)
 	frame := ctx.GetValue("frame").(uint8)
 	for i := 0; i < len(h.herd); i++ {
 		sheep := h.herd[i]
 		if !sheep.Alive() {
-			deaths++
 			continue
 		}
 		sheep.food -= dt
@@ -96,10 +93,6 @@ func (h *Herd) Update(ctx runtime.AppContext) (inAction bool) {
 				sheep.step = 0
 			}
 		}
-	}
-
-	if deaths >= len(h.herd) {
-		inAction = false
 	}
 	return
 }

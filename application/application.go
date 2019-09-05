@@ -37,12 +37,12 @@ func (a *Application) update(ctx runtime.AppContext) {
 		camPos := pixel.IM.Scaled(a.world.Camera().Pos(), 1).Moved(ctx.Win().Bounds().Center().Sub(a.world.Camera().Pos()))
 		mouse := camPos.Unproject(ctx.Win().MousePosition())
 		log.Printf("Clicked at pos %v", mouse)
+		tip := a.world.TilesInProximity(mouse, 0)
+		log.Printf("%s", tip.On.Tile)
 	}
 	a.world.Update(ctx)
-	if ia := a.herd.Update(ctx); ia == false {
-		a.win.SetClosed(true)
-		return
-	}
+	a.herd.Update(ctx)
+
 	a.draw(ctx)
 }
 
@@ -120,7 +120,7 @@ func createHerd(bounds pixel.Rect) (*fauna.Herd, error) {
 	herd, err := fauna.NewHerd(fauna.HerdConfig{
 		SheepPicture:  sprite,
 		Bounds:        bounds,
-		NumberOfSheep: 15,
+		NumberOfSheep: 0,
 	})
 	if err != nil {
 		return nil, xerrors.Errorf("fatal error creating the herd: %w", err)

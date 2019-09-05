@@ -65,16 +65,26 @@ func (w *World) Bounds() pixel.Rect {
 }
 
 func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TilesInProximity {
-	r := len(w.tiles) - int(pos.Y/tileEdge) - 1
+	// get local copies of coords, make sure to take the world offset into account
+	x, y := pos.X+(tileEdge/2), pos.Y+(tileEdge/2)
+	r := int(y / tileEdge)
 	if r < 0 {
 		r = 0
 	}
+	if r >= len(w.tiles) {
+		r = len(w.tiles) - 1
+	}
 	row := w.tiles[r]
-	c := len(row) - int(pos.X/tileEdge) - 1
+
+	c := int(x / tileEdge)
 	if c < 0 {
 		c = 0
 	}
+	if c >= len(row) {
+		c = len(row) - 1
+	}
 	tile := row[c]
+
 	// auto-set max foreseeable range
 	proximity := make([]TileType, 0, 8)
 
@@ -155,7 +165,7 @@ func (w *World) Draw(ctx runtime.AppContext) {
 					s = w.grassSprite
 				}
 
-				mat2 := mat.Moved(win.Bounds().Min.Add(pixel.V(tileEdge*float64(r), tileEdge*float64(c))))
+				mat2 := mat.Moved(win.Bounds().Min.Add(pixel.V(tileEdge*float64(c), tileEdge*float64(r))))
 				s.Draw(w.batch, mat2)
 			}
 		}

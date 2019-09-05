@@ -1,5 +1,7 @@
 package world
 
+import "fmt"
+
 const (
 	tileEdge float64 = 150
 )
@@ -30,6 +32,19 @@ type Tile struct {
 	terrainTile TerrainTile
 	sinceChange int
 	quantity    float64
+}
+
+func (t *Tile) String() string {
+	var tt string
+	switch t.terrainTile {
+	case Water:
+		tt = "water"
+	case Grass:
+		tt = "grass"
+	case Food:
+		tt = "food"
+	}
+	return fmt.Sprintf("Tile\n========\nType: %s\n qty: %f\n\n", tt, t.quantity)
 }
 
 func (t *Tile) DeductQuantity(v float64) float64 {
