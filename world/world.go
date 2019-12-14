@@ -15,6 +15,31 @@ const (
 
 type TerrainLayout [][]TerrainTile
 
+func TileAt(w *World, pos pixel.Vec) *Tile {
+	x, y := pos.X, pos.Y
+
+	r := int(y / tileEdge)
+
+	if r < 0 {
+		r = 0
+	}
+	if r >= len(w.tiles) {
+		r = len(w.tiles) - 1
+	}
+	row := w.tiles[r]
+
+	c := int(x / tileEdge)
+	if c < 0 {
+		c = 0
+	}
+	if c >= len(row) {
+		c = len(row) - 1
+	}
+	tile := row[c]
+
+	return tile
+}
+
 // World holds all data and functions for the simulation surroundings
 type World struct {
 	grassSprite *pixel.Sprite
@@ -43,29 +68,32 @@ func (w *World) Bounds() pixel.Rect {
 func (w *World) TilesInProximity(pos pixel.Vec, radius float64) TilesInProximity {
 	// get local copies of coords, make sure to take the world offset into account
 	x, y := pos.X+(tileEdge/2), pos.Y+(tileEdge/2)
-	r := int(y / tileEdge)
-	if r < 0 {
-		r = 0
-	}
-	if r >= len(w.tiles) {
-		r = len(w.tiles) - 1
-	}
-	row := w.tiles[r]
-
-	c := int(x / tileEdge)
-	if c < 0 {
-		c = 0
-	}
-	if c >= len(row) {
-		c = len(row) - 1
-	}
-	tile := row[c]
+	tile := TileAt(w, pixel.Vec{X: x, Y: y})
 
 	// auto-set max foreseeable range
 	proximity := make([]TileType, 0, 8)
 
 	//// do a simple perimeter check
-	//// TODO fix this
+	minX := x - radius
+	maxX := x + radius
+	minY := y - radius
+	maxY := y + radius
+	points := make([]pixel.Vec, 8)
+	points[0] = pixel.Vec{X: minX, Y: y}
+	points[1] = pixel.Vec{X: maxX, Y: y}
+	points[2] = pixel.Vec{X: x, Y: minY}
+	points[3] = pixel.Vec{X: x, Y: maxY}
+	points[4] = pixel.Vec{X: minX, Y: minY}
+	points[5] = pixel.Vec{X: maxX, Y: maxY}
+	points[6] = pixel.Vec{X: minX, Y: maxY}
+	points[7] = pixel.Vec{X: maxX, Y: minY}
+
+	for _, p := range points {
+		proximity = append(proximity, TileType{
+			Pos:  p,
+			Tile: TileAt(w, p),
+		})
+	}
 
 	return TilesInProximity{
 		On: TileType{

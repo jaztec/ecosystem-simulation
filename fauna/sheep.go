@@ -26,7 +26,7 @@ func NewSheep() Sheep {
 			attractiveness: Attractive(rand.Intn(3)),
 		},
 		movable{
-			direction:    Direction(rand.Intn(4)),
+			direction:    Direction(rand.Intn(4)) + 1,
 			movingSpeedX: 0,
 			movingSpeedY: 0,
 			position:     pixel.ZV,

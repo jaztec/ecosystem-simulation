@@ -71,23 +71,34 @@ func (h *Herd) Update(ctx runtime.AppContext) {
 		}
 
 		tip := wo.TilesInProximity(sheep.Position(), sheep.Vision())
+
+		if sheep.water < (maxWater/100.0)*50.0 {
+			if ok, target, onSpot := tip.HasTileType(world.Water); ok || onSpot {
+				if onSpot {
+					sheep.SetMovingSpeedX(0.0)
+					sheep.SetMovingSpeedY(0.0)
+				} else {
+					moveToSpot(sheep, target.Pos)
+				}
+			}
+		} else if sheep.food < (maxFood/100.0)*50.0 {
+			if ok, target, onSpot := tip.HasTileType(world.Food); ok || onSpot {
+				if onSpot {
+					sheep.SetMovingSpeedX(0.0)
+					sheep.SetMovingSpeedY(0.0)
+				} else {
+					moveToSpot(sheep, target.Pos)
+				}
+			}
+		} else {
+			//randomMovement(sheep, h.bounds)
+		}
+
 		switch tip.On.Tile.Terrain() {
 		case world.Food:
 			sheep.food += tip.On.Tile.DeductQuantity(maxFood - sheep.Food())
 		case world.Water:
 			sheep.water += maxWater - sheep.Water()
-		}
-
-		if sheep.water < (maxWater/100.0)*30.0 {
-			if ok, _, onSpot := tip.HasTileType(world.Water); ok || onSpot {
-				// head for the water
-			}
-		} else if sheep.food < (maxFood/100.0)*30.0 {
-			if ok, _, onSpot := tip.HasTileType(world.Food); ok || onSpot {
-				// head for the food
-			}
-		} else {
-			randomMovement(sheep, h.bounds)
 		}
 
 		if frame%8 == 0 {
@@ -112,7 +123,11 @@ func (h *Herd) Draw(ctx runtime.AppContext) {
 		var s *pixel.Sprite
 
 		if sheep.MovingSpeedX() == 0 {
-			s = h.sprites[StoppedIndex][int(sheep.Direction())]
+			d := sheep.Direction()
+			if d != 0 {
+				d -= 1
+			}
+			s = h.sprites[StoppedIndex][d]
 		} else {
 			switch sheep.Direction() {
 			case Up:

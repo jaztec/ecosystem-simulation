@@ -175,7 +175,7 @@ func (m *movable) SetDirection(d Direction) {
 }
 
 func (m *movable) CalcDirection() Direction {
-	var d Direction
+	var d Direction = Left
 	if m.movingSpeedX < 0 && math.Abs(m.movingSpeedY) <= math.Abs(m.movingSpeedX) {
 		d = Left
 	} else if m.movingSpeedX > 0 && math.Abs(m.movingSpeedY) <= math.Abs(m.movingSpeedX) {
@@ -248,8 +248,17 @@ func randomMovement(m Movable, bounds pixel.Rect) Movable {
 	if m.MovingSpeedX() == 0.0 && m.MovingSpeedY() == 0.0 {
 		// optionally start moving again
 		if m.TimeIdle() > changer {
-			m.SetMovingSpeedX(m.Speed())
-			m.SetMovingSpeedY(m.Speed())
+			if neg := rand.Intn(1); neg == 1 {
+				m.SetMovingSpeedX(-m.Speed())
+			} else {
+				m.SetMovingSpeedX(m.Speed())
+			}
+			if neg := rand.Intn(1); neg == 1 {
+				m.SetMovingSpeedY(-m.Speed())
+			} else {
+				m.SetMovingSpeedY(m.Speed())
+			}
+
 			m.SetTimeIdle(0)
 		}
 	} else {
@@ -291,6 +300,42 @@ func randomMovement(m Movable, bounds pixel.Rect) Movable {
 	// check if we are still in bounds
 	checkOutBounds(m, bounds)
 	m.SetDirection(m.CalcDirection())
+
+	return m
+}
+
+func moveToSpot(m Movable, target pixel.Vec) Movable {
+	pos := m.Position()
+
+	xDiff := pos.X - target.X
+	yDiff := pos.Y - target.Y
+	totalDiff := xDiff + yDiff
+	xPerc := (xDiff * 100) / totalDiff
+	yPerc := (yDiff * 100) / totalDiff
+	xSpeed := (m.Speed() * 2.0) / 100.0 * xPerc
+	ySpeed := (m.Speed() * 2.0) / 100.0 * yPerc
+
+	if pos.X > target.X {
+		m.SetMovingSpeedX(0.0 - xSpeed)
+	} else if pos.X < target.X {
+		m.SetMovingSpeedX(0.0 + xSpeed)
+	} else {
+		m.SetMovingSpeedX(0.0)
+	}
+
+	if pos.Y > target.Y {
+		m.SetMovingSpeedY(0.0 - ySpeed)
+	} else if pos.Y < target.Y {
+		m.SetMovingSpeedY(0.0 + ySpeed)
+	} else {
+		m.SetMovingSpeedY(0.0)
+	}
+
+	delta := pixel.ZV
+	delta.X = m.MovingSpeedX()
+	delta.Y = m.MovingSpeedY()
+
+	m.SetPosition(m.Position().Add(delta))
 
 	return m
 }
